@@ -68,4 +68,8 @@ def extract_event(text: str) -> EventCreate:
     raw_content = response.json()["choices"][0]["message"]["content"]
 
     data = json.loads(raw_content)
+    data.setdefault("description", "")
+    data.setdefault("location", "")
+    data.setdefault("source", "manual")
     return EventCreate(**data)
+    

@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from services.extractor import extract_event as extract_create
 
 class ExtractEvent(BaseModel):
-    text_request:str
+    text:str
     
     
 router = APIRouter(prefix="/events" , tags=["events"])
@@ -58,7 +58,7 @@ def update_event(id : int , payload : EventUpdate , db : Session = Depends(get_d
 @router.post("/extract" , response_model=EventResponse , status_code=201)
 def extract_event(payload : ExtractEvent ,  db : Session = Depends(get_db)):
     try:
-        event = extract_create(payload.text_request)
+        event = extract_create(payload.text)
     except Exception as e:
         raise HTTPException(
             status_code=422,
