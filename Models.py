@@ -1,5 +1,5 @@
 from database import Base
-from sqlalchemy import  Column , Integer , String , Date , Time , Boolean
+from sqlalchemy import  Column , Integer , String , Date , Time 
 
 
 # ID : int

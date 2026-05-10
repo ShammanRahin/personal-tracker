@@ -4,7 +4,13 @@ from typing import List
 from sqlalchemy.orm import Session 
 from database import get_db
 from crud import events as crud_events
+from pydantic import BaseModel
+from services.extractor import extract_event as extract_create
 
+class ExtractEvent(BaseModel):
+    text_request:str
+    
+    
 router = APIRouter(prefix="/events" , tags=["events"])
 
 
@@ -48,3 +54,14 @@ def update_event(id : int , payload : EventUpdate , db : Session = Depends(get_d
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     return event
+
+@router.post("/extract" , response_model=EventResponse , status_code=201)
+def extract_event(payload : ExtractEvent ,  db : Session = Depends(get_db)):
+    try:
+        event = extract_create(payload.text_request)
+    except Exception as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Could not extract event: {str(e)}"
+        )
+    return crud_events.create_event(db, event)
