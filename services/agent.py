@@ -140,7 +140,6 @@ def dispatch(db: Session, tool_name: str, arguments: dict) -> str:
             return f"No event with id {event_id} — nothing deleted."
 
         return f"Deleted event id {event_id}."
-    
     if tool_name == "update_event":
         event_id = int(arguments.pop("id"))
         if "priority" in arguments:
@@ -205,7 +204,7 @@ Take the needed actions using the tools. When done, reply with one short sentenc
     ]
 
     # The agent loop — up to 5 rounds
-    for _ in range(5):
+    for _ in range(105):
         try:
             reply = _call_groq(messages)
         except requests.exceptions.HTTPError:
