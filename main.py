@@ -1,14 +1,16 @@
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from database import engine
 from models import Base
 from routers import events
-from fastapi.middleware.cors import CORSMiddleware
-Base.metadata.create_all(bind=engine)
 from routers import routines as routines_router
-import os
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+Base.metadata.create_all(bind=engine)
+
 app = FastAPI()
 
 app.add_middleware(
