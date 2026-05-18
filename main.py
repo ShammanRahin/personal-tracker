@@ -4,19 +4,25 @@ from models import Base
 from routers import events
 from fastapi.middleware.cors import CORSMiddleware
 Base.metadata.create_all(bind=engine)
+from routers import routines as routines_router
+import os
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://*.vercel.app",           
+        os.getenv("FRONTEND_URL", ""),    
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(events.router)
-
+app.include_router(routines_router.router)
 
     
 @app.get("/")

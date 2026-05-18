@@ -42,7 +42,7 @@ def get_event(id :int = Path(...,description = "insert ID" , gt=0 ,lt=999) , db:
 
 
 @router.get("" ,response_model=List[EventResponse])
-def get_events(skip : int = 0 ,lim: int = 50 , db : Session = Depends(get_db)):
+def get_events(skip : int = 0 ,lim: int = 500 , db : Session = Depends(get_db)):
     return crud_events.get_events(db , skip=skip , lim=lim)
     
         
