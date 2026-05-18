@@ -28,4 +28,5 @@ class Eventdb(Base):
     color = Column(String)
     description = Column(String)
     location = Column(String)
-    source = Column(String , nullable=False)
+    source = Column(String , nullable=True)
+    source_id = Column(String ,nullable=True )

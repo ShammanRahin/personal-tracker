@@ -6,6 +6,7 @@ from database import get_db
 from crud import events as crud_events
 from pydantic import BaseModel
 from services.extractor import extract_event as extract_create
+from services.sync import sync_gmail as sync_create
 
 class ExtractEvent(BaseModel):
     text:str
@@ -65,3 +66,13 @@ def extract_event(payload : ExtractEvent ,  db : Session = Depends(get_db)):
             detail=f"Could not extract event: {str(e)}"
         )
     return crud_events.create_event(db, event)
+@router.post("/sync" , status_code=201)
+def sync_gmail( limit : int = 10, db : Session = Depends(get_db) ):
+    try:
+        events = sync_create(limit= limit , db=db)
+    except Exception as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Could not sync gmail: {str(e)}"
+        )
+    return events

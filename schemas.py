@@ -13,7 +13,8 @@ class EventCreate(BaseModel):
     color : str
     description : str
     location : str
-    source : str
+    source : Optional[str] =None
+    source_id :Optional[str] =None
     
     
 class EventResponse(BaseModel):
@@ -28,6 +29,7 @@ class EventResponse(BaseModel):
     description : str
     location : str
     source : str
+    source_id :Optional[str] =None
     class Config:
         from_attributes= True
     
