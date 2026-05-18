@@ -2,35 +2,25 @@ from sqlalchemy.orm import Session
 from services.gmail import fetch_recent_emails
 from services.extractor import extract_event
 import crud.events as crud_events
+from services.agent import run_agent
 
 
 def sync_gmail(db: Session, limit: int = 10) -> dict:
-    """Fetch recent emails, extract events from each, save to DB."""
+    """Fetch recent emails, let the agent decide what to do with each."""
     emails = fetch_recent_emails(limit=limit)
-
-    created = []
-    skipped = []
+    results = []
 
     for email in emails:
-        # Build the text the LLM will read
         text = f"Subject: {email['subject']}\n\n{email['snippet']}"
 
+        # Fetch fresh events each time — earlier emails may have changed things
+        events = crud_events.get_events(db)
+
         try:
-            event_data = extract_event(text)
+            reply = run_agent(db, text, events)
         except Exception as e:
-            skipped.append({"subject": email["subject"], "reason": str(e)})
-            continue
+            reply = f"Error: {str(e)}"
 
-        # Tag the event with its origin
-        event_data.source = "gmail"
-        event_data.source_id = email["id"]
+        results.append({"subject": email["subject"], "agent_reply": reply})
 
-        new_event = crud_events.create_event(db, event_data)
-        created.append(new_event.title)
-
-    return {
-        "created_count": len(created),
-        "created": created,
-        "skipped_count": len(skipped),
-        "skipped": skipped,
-    }
+    return {"processed": len(results), "results": results}

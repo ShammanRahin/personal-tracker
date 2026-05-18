@@ -7,14 +7,28 @@ from crud import events as crud_events
 from pydantic import BaseModel
 from services.extractor import extract_event as extract_create
 from services.sync import sync_gmail as sync_create
-
+from services.agent import run_agent
 class ExtractEvent(BaseModel):
     text:str
     
     
 router = APIRouter(prefix="/events" , tags=["events"])
+class ChatMessage(BaseModel):
+    message: str
+
+@router.post("/chat")
+def chat(payload: ChatMessage, db: Session = Depends(get_db)):
+    events = crud_events.get_events(db)
+    try:
+        reply = run_agent(db, payload.message, events)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Agent error: {str(e)}")
+    return {"reply": reply}
 
 
+@router.get("/search")
+def search_events(query : str , query_title : str , db : Session = Depends(get_db)):
+    return crud_events.search_events(query=query , query_title=query_title , db=db)
 
 @router.get("/{id}" , response_model=EventResponse)
 def get_event(id :int = Path(...,description = "insert ID" , gt=0 ,lt=999) , db:Session = Depends(get_db)):
