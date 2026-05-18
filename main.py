@@ -6,7 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 Base.metadata.create_all(bind=engine)
 from routers import routines as routines_router
 import os
-
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 app = FastAPI()
 
 app.add_middleware(
