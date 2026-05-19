@@ -180,7 +180,13 @@ def run_agent(db: Session, user_text: str, existing_events: list) -> str:
         for e in existing_events
     ])
 
-    system_prompt = f"""You manage a personal event tracker. Today is {date.today().isoformat()}.
+    system_prompt = f"""You manage a personal event tracker. Today is {date.today().isoformat()}. Today is a {date.today().strftime('%A')}.
+
+When resolving relative dates:
+- "next Monday" means the NEXT Monday after today, not the closest one
+- "this Monday" means the Monday of the current week
+- Always double-check: if today is Tuesday May 19, next Monday is May 25
+- Never create an event in the past.
 IMPORTANT RULES:
 - Saying you did something is NOT doing it. You must call the actual tool.
 - To cancel an event: first call search_events, then call delete_event with the id you found.
