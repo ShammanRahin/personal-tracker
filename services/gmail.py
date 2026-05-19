@@ -7,7 +7,12 @@ from googleapiclient.discovery import build
 
 import json
 
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+SCOPES = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/classroom.courses.readonly",
+    "https://www.googleapis.com/auth/classroom.coursework.me.readonly",
+    "https://www.googleapis.com/auth/classroom.announcements.readonly",
+]
 CREDENTIALS_FILE = "credentials.json"
 TOKEN_FILE = "token.json"
 

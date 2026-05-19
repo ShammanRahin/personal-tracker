@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from services.extractor import extract_event as extract_create
 from services.sync import sync_gmail as sync_create
 from services.agent import run_agent
+from services.sync_classroom import sync_classroom as classroom_sync
 class ExtractEvent(BaseModel):
     text:str
     
@@ -15,6 +16,17 @@ class ExtractEvent(BaseModel):
 router = APIRouter(prefix="/events" , tags=["events"])
 class ChatMessage(BaseModel):
     message: str
+    
+@router.post("/sync/classroom")
+def sync_classroom_endpoint(db: Session = Depends(get_db)):
+    try:
+        result = classroom_sync(db)
+    except Exception as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Could not sync classroom: {str(e)}"
+        )
+    return result
 @router.get("/debug/credentials")
 def debug_credentials():
     import os
