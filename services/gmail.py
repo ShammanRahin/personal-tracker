@@ -16,14 +16,15 @@ TOKEN_FILE = "token.json"
 def get_gmail_service():
     creds = None
 
-    if os.path.exists(TOKEN_FILE):
+    # Production: prefer env var
+    token_json_str = os.getenv("GOOGLE_TOKEN_JSON")
+    if token_json_str:
+        creds = Credentials.from_authorized_user_info(
+            json.loads(token_json_str), SCOPES
+        )
+    # Local dev: use token.json file
+    elif os.path.exists(TOKEN_FILE):
         creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
-    else:
-        token_json_str = os.getenv("GOOGLE_TOKEN_JSON")
-        if token_json_str:
-            creds = Credentials.from_authorized_user_info(
-                json.loads(token_json_str), SCOPES
-            )
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
@@ -35,7 +36,6 @@ def get_gmail_service():
             )
 
     return build("gmail", "v1", credentials=creds)
-
 
 def _get_header(headers: list, name: str) -> str:
     """Pull a single header value (e.g. 'Subject') out of the headers list."""
