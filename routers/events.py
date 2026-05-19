@@ -15,7 +15,15 @@ class ExtractEvent(BaseModel):
 router = APIRouter(prefix="/events" , tags=["events"])
 class ChatMessage(BaseModel):
     message: str
-
+@router.get("/debug/credentials")
+def debug_credentials():
+    import os
+    token_str = os.getenv("GOOGLE_TOKEN_JSON")
+    return {
+        "has_env_var": token_str is not None,
+        "env_var_length": len(token_str) if token_str else 0,
+        "token_file_exists": os.path.exists("token.json"),
+    }
 @router.post("/chat")
 def chat(payload: ChatMessage, db: Session = Depends(get_db)):
     events = crud_events.get_events(db)
