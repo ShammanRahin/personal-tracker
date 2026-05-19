@@ -5,9 +5,12 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
+import json
+
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 CREDENTIALS_FILE = "credentials.json"
 TOKEN_FILE = "token.json"
+
 
 
 def get_gmail_service():
@@ -15,15 +18,21 @@ def get_gmail_service():
 
     if os.path.exists(TOKEN_FILE):
         creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+    else:
+        token_json_str = os.getenv("GOOGLE_TOKEN_JSON")
+        if token_json_str:
+            creds = Credentials.from_authorized_user_info(
+                json.loads(token_json_str), SCOPES
+            )
+
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
-            creds = flow.run_local_server(port=0)
-        # Save for next time
-        with open(TOKEN_FILE, "w") as token:
-            token.write(creds.to_json())
+            raise RuntimeError(
+                "No valid Google credentials on server. "
+                "Re-authorize locally and update GOOGLE_TOKEN_JSON."
+            )
 
     return build("gmail", "v1", credentials=creds)
 

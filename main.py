@@ -17,7 +17,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://*.vercel.app",           
+        "https://personal-tracker-web.vercel.app",           
         os.getenv("FRONTEND_URL", ""),    
     ],
     allow_credentials=True,
