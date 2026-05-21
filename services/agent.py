@@ -1,4 +1,6 @@
 import json
+import re
+import time
 from sqlalchemy.orm import Session
 from crud import events as crud_events
 from schemas import EventCreate, EventUpdate
@@ -11,7 +13,7 @@ load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-MODEL = "openai/gpt-oss-120b"
+MODEL = "llama-3.3-70b-versatile"
 
 TOOLS = [
     {
@@ -156,22 +158,33 @@ def dispatch(db: Session, tool_name: str, arguments: dict) -> str:
 
 
 def _call_groq(messages: list) -> dict:
-    """One call to Groq with tools enabled. Returns the message object."""
-    response = requests.post(
-        GROQ_URL,
-        headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
-        json={
-            "model": MODEL,
-            "messages": messages,
-            "tools": TOOLS,
-            "temperature": 0.1,
-        },
-        timeout=30,
-    )
-    if not response.ok:
-        print("GROQ ERROR:", response.status_code, response.text)   # ← add this
+    """One call to Groq with tools enabled. Retries on 429 rate limits."""
+    for attempt in range(5):
+        response = requests.post(
+            GROQ_URL,
+            headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+            json={
+                "model": MODEL,
+                "messages": messages,
+                "tools": TOOLS,
+                "temperature": 0.1,
+            },
+            timeout=30,
+        )
+        if response.status_code == 429:
+            try:
+                msg = response.json()["error"]["message"]
+                wait = float(re.search(r"try again in ([\d.]+)s", msg).group(1)) + 1
+            except Exception:
+                wait = 15
+            print(f"Rate limited, waiting {wait:.1f}s (attempt {attempt + 1}/5)")
+            time.sleep(wait)
+            continue
+        if not response.ok:
+            print("GROQ ERROR:", response.status_code, response.text)
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]
     response.raise_for_status()
-    return response.json()["choices"][0]["message"]
 
 
 def run_agent(db: Session, user_text: str, existing_events: list) -> str:
