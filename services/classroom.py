@@ -8,7 +8,7 @@ from googleapiclient.discovery import build
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/classroom.courses.readonly",
-    "https://www.googleapis.com/auth/classroom.coursework.me.readonly",
+    "https://www.googleapis.com/auth/classroom.student-submissions.me.readonly",
     "https://www.googleapis.com/auth/classroom.announcements.readonly",
 ]
 TOKEN_FILE = "token.json"
@@ -62,32 +62,28 @@ def fetch_courses() -> list:
 def fetch_assignments(course_id: str, limit: int = 20) -> list:
     """Return upcoming coursework for one course."""
     service = get_classroom_service()
-    result = service.courses().courseWork().list(
-        courseId=course_id,
-        orderBy="dueDate asc",
-        pageSize=limit,
-        courseWorkStates=["PUBLISHED"],
-    ).execute()
+    try:
+        result = service.courses().courseWork().list(
+            courseId=course_id,
+            orderBy="dueDate asc",
+            pageSize=limit,
+            courseWorkStates=["PUBLISHED"],
+        ).execute()
+    except Exception:
+        return []
 
     items = result.get("courseWork", [])
     assignments = []
 
     for item in items:
         due = item.get("dueDate")
-        due_time = item.get("dueTime")
-
         if not due:
             continue
 
-        # Build ISO date string
         due_date = f"{due['year']}-{str(due['month']).zfill(2)}-{str(due['day']).zfill(2)}"
-
-        if due_time:
-            due_hour = str(due_time.get("hours", 23)).zfill(2)
-            due_minute = str(due_time.get("minutes", 59)).zfill(2)
-            due_time_str = f"{due_hour}:{due_minute}:00"
-        else:
-            due_time_str = "23:59:00"
+        due_time = item.get("dueTime", {})
+        due_hour = str(due_time.get("hours", 23)).zfill(2)
+        due_minute = str(due_time.get("minutes", 59)).zfill(2)
 
         assignments.append({
             "id": item["id"],
@@ -95,8 +91,7 @@ def fetch_assignments(course_id: str, limit: int = 20) -> list:
             "title": item.get("title", "Assignment"),
             "description": item.get("description", ""),
             "due_date": due_date,
-            "due_time": due_time_str,
-            "link": item.get("alternateLink", ""),
+            "due_time": f"{due_hour}:{due_minute}:00",
         })
 
     return assignments

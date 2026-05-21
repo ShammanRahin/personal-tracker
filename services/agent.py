@@ -34,6 +34,10 @@ TOOLS = [
                                 "work", "personal", "family", "other"],
                         "description": "Event category",
                     },
+                    "source_id": {
+                        "type": "string",
+                        "description": "Stable external identifier for deduplication. Pass through unchanged if provided in the input text.",
+                    },
                 },
                 "required": ["title", "start_date", "start_time", "priority", "color"],
             },

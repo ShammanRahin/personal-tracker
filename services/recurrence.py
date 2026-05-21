@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from schemas import EventCreate
 from crud import events as crud_events
 from models import Routinedb
-
+from models import Eventdb
 
 def _next_weekday(from_date: date, weekday: int) -> date:
     """Return the next occurrence of `weekday` (0=Mon) on or after `from_date`."""
@@ -31,7 +31,7 @@ def generate_upcoming_events(
         event_date = first_occurrence + timedelta(weeks=week)
 
         # Check if this slot already exists (avoid duplicates on re-run)
-        existing = db.query(__import__('models').Eventdb).filter_by(
+        existing = db.query(Eventdb).filter_by(
             routine_id=routine.id,
             start_date=event_date,
         ).first()

@@ -1,3 +1,5 @@
+import os
+os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
 import os.path
 
 from google.auth.transport.requests import Request
@@ -7,7 +9,12 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+SCOPES = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/classroom.courses.readonly",
+    "https://www.googleapis.com/auth/classroom.student-submissions.me.readonly",
+    "https://www.googleapis.com/auth/classroom.announcements.readonly",
+]
 
 
 def main():
@@ -28,7 +35,12 @@ def main():
       flow = InstalledAppFlow.from_client_secrets_file(
           "credentials.json", SCOPES
       )
-      creds = flow.run_local_server(port=0)
+      print("BEFORE FLOW")
+      creds = flow.run_local_server(
+      port=0,
+      prompt="consent"
+      )
+      print("AFTER FLOW")
     # Save the credentials for the next run
     with open("token.json", "w") as token:
       token.write(creds.to_json())

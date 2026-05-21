@@ -19,6 +19,9 @@ def get_event(db : Session , id : int):
 def get_events(db : Session ,skip : int = 0 ,lim: int = 50 ):
     return db.query(Eventdb).offset(skip).limit(lim).all()
 
+def get_event_by_source_id(db: Session, source_id: str):
+    return db.query(Eventdb).filter(Eventdb.source_id == source_id).first()
+
 def create_event( db : Session ,event: EventCreate ):
     new_event = Eventdb(**event.model_dump())
     db.add(new_event)

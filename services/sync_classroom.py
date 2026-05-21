@@ -24,16 +24,20 @@ def sync_classroom(db: Session, assignment_limit: int = 20) -> dict:
         # ── Assignments ──────────────────────────────────────────
         assignments = fetch_assignments(course_id, limit=assignment_limit)
         for a in assignments:
-            # Build natural language text the agent understands
+            sid = f"classroom:{a['id']}"
+            if crud_events.get_event_by_source_id(db, sid):
+                continue
+
             text = (
                 f"Assignment due: {a['title']} "
                 f"for {course_name} "
                 f"on {a['due_date']} at {a['due_time']}."
+                f" [source_id: {sid}]"
             )
             if a["description"]:
-                text += f" Details: {a['description'][:200]}"
+                text += f" Details: {a['description'][:150]}"
 
-            events = crud_events.get_events(db, lim=500)
+            events = crud_events.get_events(db, lim=50)
             try:
                 reply = run_agent(db, text, events)
             except Exception as e:
@@ -52,8 +56,12 @@ def sync_classroom(db: Session, assignment_limit: int = 20) -> dict:
             if not ann["text"].strip():
                 continue
 
-            text = f"Classroom announcement from {course_name}: {ann['text'][:500]}"
-            events = crud_events.get_events(db, lim=500)
+            sid = f"classroom_ann:{ann['id']}"
+            if crud_events.get_event_by_source_id(db, sid):
+                continue
+
+            text = f"Classroom announcement from {course_name}: {ann['text'][:200]} [source_id: {sid}]"
+            events = crud_events.get_events(db, lim=50)
             try:
                 reply = run_agent(db, text, events)
             except Exception as e:
