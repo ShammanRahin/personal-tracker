@@ -13,7 +13,7 @@ load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-MODEL = "llama-3.3-70b-versatile"
+MODEL = "llama3-groq-70b-8192-tool-use-preview"
 
 TOOLS = [
     {
@@ -180,9 +180,11 @@ def _call_groq(messages: list) -> dict:
             print(f"Rate limited, waiting {wait:.1f}s (attempt {attempt + 1}/5)")
             time.sleep(wait)
             continue
+        # Non-429 errors (including tool_use_failed 400) — raise immediately
+        # so the agent loop can handle them with its nudge logic
         if not response.ok:
             print("GROQ ERROR:", response.status_code, response.text)
-        response.raise_for_status()
+            response.raise_for_status()
         return response.json()["choices"][0]["message"]
     response.raise_for_status()
 
